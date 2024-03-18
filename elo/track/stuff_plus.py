@@ -10,7 +10,7 @@ from matplotlib.colors import TwoSlopeNorm, LinearSegmentedColormap
 #TODO: how identify Cutter_S when auto pitch classifies sinkers?
 from flask import Flask, render_template, request, app
 from scipy.stats import gaussian_kde
-from shiny import App, render, ui
+# from shiny import App, render, ui
 import numpy as np
 import pandas as pd
 from keras.src.layers import Masking

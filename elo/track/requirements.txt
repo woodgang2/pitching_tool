@@ -1,5 +1,4 @@
 numpy
-optuna
 pandas
 matplotlib
 scipy
@@ -9,3 +8,13 @@ xgboost
 joblib
 dash
 streamlit
+sqlalchemy
+seaborn
+optuna
+tensorflow
+keras
+flask
+enum34; python_version<"3.4"
+gaussian-kde
+tensorflow-keras
+tensorflow.keras
