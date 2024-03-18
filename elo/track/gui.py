@@ -102,7 +102,7 @@ with col1:
         # st.write('Updated. You may have to reload the page to see the effects')
 # Button to toggle between personal details and team view
 with col2:
-    team_toggle = st.button("Search by team/player instead")
+    team_toggle = st.button("Toggle team/player")
     if (team_toggle):
         st.session_state.team_flag = not st.session_state.team_flag
         # st.write (team_flag)
