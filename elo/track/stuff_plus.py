@@ -1508,7 +1508,7 @@ driver = Driver ('radar2.db', 'radar_data', Focus.Stuff)
 #VAA above average
 #Bat speed?
 
-
+# print(tf.__version__)
 # run_model ()
 # generate_stuff_ratings()
 # driver.find_overall_percentiles()
