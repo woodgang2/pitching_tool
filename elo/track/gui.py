@@ -87,13 +87,18 @@ if 'team_flag' not in st.session_state:
 # Your database initialization
 driver = database_driver.DatabaseDriver()
 stuff_driver = stuff_plus.Driver('radar2.db', 'radar_data')
-counter = 0
+counter = 1
 # Update dataset button
 col1, col2, space = st.columns([2, 2, 2])
 with col1:
     update = st.button("Update Dataset", key='update_dataset', type = 'primary')
     if update:
-        st.write (f"I'm a placeholder button. You've pushed me {++counter} times - want to do it again?")
+        if (counter < 20):
+            st.write (f"I'm a placeholder button. You've pushed me {counter} times - want to do it again?")
+            counter = counter + 1
+        else:
+            st.error ("I can't do this anymore")
+            update = st.empty ()
         # st.write('Updating. May take a while')
         # driver.read_data()
         # stuff_plus.process_data()
