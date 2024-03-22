@@ -93,7 +93,7 @@ col1, col2, space = st.columns([2, 2, 2])
 with col1:
     update = st.button("Update Dataset", key='update_dataset', type = 'primary')
     if update:
-        st.write ('')
+        st.write ("I'm a placeholder button")
         # st.write('Updating. May take a while')
         # driver.read_data()
         # stuff_plus.process_data()
