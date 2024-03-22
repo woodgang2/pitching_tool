@@ -83,6 +83,16 @@ class DatabaseDriver:
             df = df [df['BatterTeam'] == team]
         df = df [df['Batter'] == player]
         return df
+
+    def retrieve_percentiles_bat_team (self, team):
+        db_filename = os.path.join(self.current_dir, 'radar3.db')
+        table = 'Percentiles_Batters'
+        query = f'SELECT * FROM {table}'
+        engine = create_engine(f'sqlite:///{db_filename}')
+        df = pd.read_sql_query(query, engine)
+        if team != 'All':
+            df = df [df['BatterTeam'] == team]
+        return df
     def retrieve_percentages (self, player):
         db_filename = os.path.join(self.current_dir, 'radar3.db')
 
@@ -97,6 +107,24 @@ class DatabaseDriver:
         df = pd.read_sql_query(query, engine)
         # conn.close()
         df = df [df['Pitcher'] == player]
+        # print (df)
+        return df
+
+    def retrieve_percentages_team (self, team):
+        db_filename = os.path.join(self.current_dir, 'radar3.db')
+
+        # Create a connection to the database
+        # conn = sqlite3.connect(db_file)
+        # db_filename = 'radar2.db'
+        table = 'Stuff_Probabilities_Pitchers'
+        # table = 'Stuff_Probabilities'
+        # conn = sqlite3.connect(db_filename)
+        query = f'SELECT * FROM {table}'
+        engine = create_engine(f'sqlite:///{db_filename}')
+        df = pd.read_sql_query(query, engine)
+        # conn.close()
+        if (team != 'All'):
+            df = df [df['PitcherTeam'] == team]
         # print (df)
         return df
 
@@ -121,6 +149,23 @@ class DatabaseDriver:
         # conn.close()
         # df = df [['Batter', 'BatterTeam', 'BatterSide', 'AverageBatSpeed', 'AverageSF', 'SwingDecision', 'AverageEA', 'AverageI', 'NeutralExitSpeed', 'NeutralHR']]
         df = df [df['Batter'] == player]
+        # df = df.round(3)
+        # df ['AverageBatSpeed'] = df ['AverageBatSpeed'].round(2)
+        # df ['NeutralExitSpeed'] = df ['NeutralExitSpeed'].round(2)
+        # self.write_data(df, 'Probabilities_Batters')
+        return df
+
+    def retrieve_percentages_bat_team (self, team):
+        db_filename = os.path.join(self.current_dir, 'radar3.db')
+        table = 'Probabilities_Batters'
+        # table = 'batting_variables'
+        query = f'SELECT * FROM {table}'
+        engine = create_engine(f'sqlite:///{db_filename}')
+        df = pd.read_sql_query(query, engine)
+        # conn.close()
+        # df = df [['Batter', 'BatterTeam', 'BatterSide', 'AverageBatSpeed', 'AverageSF', 'SwingDecision', 'AverageEA', 'AverageI', 'NeutralExitSpeed', 'NeutralHR']]
+        if (team != 'All'):
+            df = df [df['BatterTeam'] == team]
         # df = df.round(3)
         # df ['AverageBatSpeed'] = df ['AverageBatSpeed'].round(2)
         # df ['NeutralExitSpeed'] = df ['NeutralExitSpeed'].round(2)

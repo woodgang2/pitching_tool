@@ -108,27 +108,50 @@ with col2:
         st.session_state.team_flag = not st.session_state.team_flag
         # st.write (team_flag)
 
+batting_percentiles_df = driver.retrieve_percentiles_bat_team ('All')
+pitching_stuff_df = driver.retrieve_stuff_team ('All')
+# Extract names and teams, and add a label for type
+batting_names = batting_percentiles_df.apply(lambda x: f"{' '.join(x['Batter'].split(', ')[::-1])} - {x['BatterTeam']}, Batter", axis=1)
+pitching_names = pitching_stuff_df.apply(lambda x: f"{' '.join(x['Pitcher'].split(', ')[::-1])} - {x['PitcherTeam']}, Pitcher", axis=1)
+team_names = pitching_stuff_df ['PitcherTeam'].unique().tolist()
+options_teams = ['', 'All'] + team_names
+# Combine into a single series
+combined_names = pd.concat([batting_names, pitching_names]).sort_values().unique()
+options = [''] + list(combined_names)
+# batting_percentages_df = driver.retrieve_percentages_bat_team ('All')
+# pitching_percentages_df = driver.retrieve_percentages_team ('All')
+# pitching_stuff_df = driver.retrieve_stuff_team ('All')
+
 # Conditional rendering based on the toggle state
 if not st.session_state.team_flag:
-    first_name = st.text_input('First Name', '', placeholder='First name', key='first_name')
-    last_name = st.text_input('Last Name', '', placeholder='Last name', key='last_name')
-    team_name = st.text_input('Team Name', '', placeholder='Team name', key='team_name')
+    # first_name = st.text_input('First Name', '', placeholder='First name', key='first_name')
+    # last_name = st.text_input('Last Name', '', placeholder='Last name', key='last_name')
+    # team_name = st.text_input('Team Name', '', placeholder='Team name', key='team_name')
+    selected_name = st.selectbox('Player', options=options, key='player_name')
+    team_name = ''
     # When both names have been entered, display the full name
     display_name = st.empty()
-    if first_name and last_name:
+    # if first_name and last_name:
+    if selected_name != '':
         # display_name = st.empty()
         # display_name.success(f'Player name: {first_name} {last_name}') #want to update this
-        name = last_name + ", " + first_name
+        # name = last_name + ", " + first_name
+        name_parts = selected_name.split(' - ')[0]  # This gets "Lastname, Firstname"
+        name = name_parts.split(' ')[1] + ", " + name_parts.split(' ')[0]  # This formats it to "Firstname Lastname"
         # st.success (team_name)
         df = driver.retrieve_percentiles (name, team_name)
-        if (df.empty):
+        # df = pitching_percentiles_df [pitching_percentages_df ['Pitcher'] == name]
+        if (df.empty) or (selected_name.split(', ')[1] == 'Batter'):
             df = driver.retrieve_percentiles_batter(name, team_name)
+            # df = batting_percentiles_df [batting_percentiles_df ['Batter'] == name]
             if (df.empty):
                 #want to write update here
-                st.error(f"{last_name}, {first_name} not found. Remember that the name is case sensitive. If you're looking for a batter, keep in mind that batters need to have >100 BBE to qualify")
+                # st.error(f"{last_name}, {first_name} not found. Remember that the name is case sensitive. If you're looking for a batter, keep in mind that batters need to have >100 BBE to qualify")
+                st.error(f"{name} not found. Something has gone wrong in the backend! Send an email to wsg9mf@virginia.edu")
             else:
                 # df = df.drop (columns = ['Batter', 'BatterTeam'])
                 raw_df = driver.retrieve_percentages_batter(name)
+                # raw_df = batting_percentages_df [batting_percentages_df ['Batter'] == name]
                 # raw_df = df
                 batter_side_counts = raw_df.groupby(['Batter', 'BatterSide']).size().unstack(fill_value=0)
                 batter_side_counts['Total'] = batter_side_counts.sum(axis=1)
@@ -139,7 +162,8 @@ if not st.session_state.team_flag:
                     raw_df.loc[raw_df['Batter'].isin(switch_batters), 'BatterSide'] = 'Switch'
                 except:
                     print ('not switch hitter')
-                display_name.success (f"Batter: {first_name} {last_name}, {raw_df ['BatterTeam'].iloc [0]}. Bats: {raw_df ['BatterSide'].iloc [0]}")
+                # display_name.success (f"Batter: {first_name} {last_name}, {raw_df ['BatterTeam'].iloc [0]}. Bats: {raw_df ['BatterSide'].iloc [0]}")
+                display_name.success (f"Batter: {name}. {raw_df ['BatterTeam'].iloc [0]}. Bats: {raw_df ['BatterSide'].iloc [0]}")
                 raw_df = raw_df.head (1)
                 raw_df = raw_df.drop (columns = ['Batter', 'BatterTeam', 'BatterSide'])
                 speed_df = raw_df [['AttackAngle', 'TrueBatSpeed', 'AverageBatSpeed', 'AverageHandSpeed', 'AverageBarrelSpeed']]
@@ -178,7 +202,10 @@ if not st.session_state.team_flag:
 
         else:
             stuff_df = driver.retrieve_stuff (name)
+            # stuff_df = pitching_stuff_df [pitching_stuff_df ['Pitcher'] == name]
+            stuff_df = stuff_df.drop_duplicates ('Pitcher')
             stuff_df = stuff_df.drop (columns = ['Pitcher', 'PitcherTeam', 'PitcherThrows'])
+            # stuff_df = stuff_df.drop_duplicates ('Pitcher')
             stuff_df.rename(columns={'Overall': 'Overall Stuff'}, inplace=True)
             columns_to_drop = [column for column in stuff_df.columns if column.endswith('Usage')]
             stuff_df = stuff_df.drop(columns=columns_to_drop)
@@ -196,7 +223,9 @@ if not st.session_state.team_flag:
             container.dataframe(stuff_df)
             container.markdown("</div>", unsafe_allow_html=True)
 
-            display_name.success (f"Pitcher: {first_name} {last_name}, {df ['PitcherTeam'].iloc [0]}. Throws: {df ['PitcherThrows'].iloc [0]}")
+            # display_name.success (f"Pitcher: {first_name} {last_name}, {df ['PitcherTeam'].iloc [0]}. Throws: {df ['PitcherThrows'].iloc [0]}")
+            display_name.success (f"Pitcher: {name}. {df ['PitcherTeam'].iloc [0]}. Throws: {df ['PitcherThrows'].iloc [0]}")
+            df = df.drop_duplicates ('PitchType')
             df = df.drop (columns = ['Pitcher', 'PitcherTeam', 'PitcherThrows', 'Balls', 'Strikes'])
             cols = [col for col in df.columns if col != 'xRV']
             cols.insert(2, 'xRV')
@@ -231,6 +260,8 @@ if not st.session_state.team_flag:
 
             st.write ("View/Edit Raws")
             prob_df = driver.retrieve_percentages(name)
+            prob_df = prob_df.drop_duplicates ('PitchType')
+            # prob_df = pitching_percentages_df [pitching_percentages_df ['Pitcher'] == name]
             prob_df = prob_df.drop (columns = ['Pitcher', 'PitcherTeam', 'PitcherThrows', 'Balls', 'Strikes'])
             cols = [col for col in prob_df.columns if col != 'xRV']
             cols.insert(2, 'xRV')
@@ -243,17 +274,21 @@ if not st.session_state.team_flag:
     # st.line_chart(df)
 else:
     # Here you can add your logic or widgets to display team view
-    team_name = st.text_input('Team ID (from trackman)', '', placeholder='Team ID (UVA is VIR_CAV) - Enter "All" to see all players', key='team_name')
+    # team_name = st.text_input('Team ID (from trackman)', '', placeholder='Team ID (UVA is VIR_CAV) - Enter "All" to see all players', key='team_name')
+    team_name = st.selectbox('Team ID (UVA is VIR_CAV)', options=options_teams, key='team_name')
     min_pitch = st.text_input('Minimum Pitch Count', '', placeholder='Pitch Count', key='min_pitch')
     display_name = st.empty()
-    if team_name:
+    if team_name != '':
         df = driver.retrieve_percentiles_team (team_name)
+        # df = pitching_percentiles_df [pitching_percentiles_df ['PitcherTeam'] == team_name]
         df_bat = driver.retrieve_percentiles_team_bat (team_name)
+        # df_bat = batting_percentiles_df [batting_percentiles_df ['BatterTeam'] == team_name]
         if (df.empty):
             #want to write update here
             st.error(f'{team_name} not found. Remember that the name is case sensitive')
         else:
             stuff_df = driver.retrieve_stuff_team (team_name)
+            # stuff_df = pitching_stuff_df [pitching_stuff_df ['PitchingTeam'] == team_name]
             if team_name != 'All':
                 stuff_df = stuff_df.drop (columns = ['PitcherTeam'])
             columns_to_drop = [column for column in stuff_df.columns if column.endswith('Usage')]
