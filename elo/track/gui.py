@@ -112,7 +112,8 @@ pitching_stuff_df = driver.retrieve_stuff_team ('All')
 # Extract names and teams, and add a label for type
 batting_names = batting_percentiles_df.apply(lambda x: f"{' '.join(x['Batter'].split(', ')[::-1])} - {x['BatterTeam']}, Batter", axis=1)
 pitching_names = pitching_stuff_df.apply(lambda x: f"{' '.join(x['Pitcher'].split(', ')[::-1])} - {x['PitcherTeam']}, Pitcher", axis=1)
-team_names = pitching_stuff_df [pitching_stuff_df ['PitcherTeam'] != 'VIR_CAV'].unique().tolist()
+pitching_stuff_df = pitching_stuff_df [pitching_stuff_df ['PitcherTeam'] != 'VIR_CAV']
+team_names = pitching_stuff_df ['PitcherTeam'].unique().tolist()
 options_teams = ['', 'All', 'VIR_CAV'] + team_names
 # Combine into a single series
 combined_names = pd.concat([batting_names, pitching_names]).sort_values().unique()
