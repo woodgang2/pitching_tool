@@ -355,7 +355,7 @@ class DatabaseDriver:
         conn.close()
         return input_variables_df
 
-    def write_data_table (self, df, table = 'variables'):#_Pitchers'):
+    def write_data_table (self, df, table = 'variables', number = 3):#_Pitchers'):
         # numeric_cols = self.input_variables_df.select_dtypes(include='number').columns.tolist()
         #
         # averages_df = self.input_variables_df.groupby(['Pitcher', 'PitchType'])[numeric_cols].mean().reset_index()
@@ -367,7 +367,7 @@ class DatabaseDriver:
         # self.input_variables_df = averages_df[final_columns]
         chunk_size = 1000  # Adjust based on your needs and system capabilities
         num_chunks = len(df) // chunk_size + 1
-        conn = sqlite3.connect(f'radar3.db')
+        conn = sqlite3.connect(f'radar{number}.db')
         conn.execute(f'DROP TABLE IF EXISTS {table}')
         with tqdm(total=len(df), desc="Writing to database") as pbar:
             for start in range(0, len(df), chunk_size):

@@ -123,7 +123,7 @@ class Driver:
 
 
     def commit_variables (self):
-        self.database_driver.write_data (self.input_variables_df, 'batting_variables')
+        self.database_driver.write_data_table (self.input_variables_df, 'batting_variables', 2)
 
     def calculate_vbat(row):
         return (row['EV'] - row['eA'] * row['vball']) / (1 + row['eA'])
@@ -255,7 +255,7 @@ class Driver:
 
         players_percentiles_df = calculate_percentiles(players_df)
         # print (players_percentiles_df)
-        self.database_driver.write_data (players_percentiles_df, 'Percentiles_Batters')
+        self.database_driver.write_data_table (players_percentiles_df, 'Percentiles_Batters', 2)
         # print (percentiles_df.to_string ())
 
     def train_classifier (self):
@@ -439,13 +439,13 @@ class Driver:
         # Concatenate the results back into one DataFrame
         df2 = pd.concat([df_left_predicted, df_right_predicted]).sort_index()
         df2 = self.calculate_I (df2, 'loc_I')
-        self.database_driver.write_data(df2, 'variable')
+        self.database_driver.write_data_table (df2, 'variable', 2)
         print (df2.head ().to_string ())
     def calculate_row_I(self, row, foul_values, starting_values):
         balls = row['Balls']  # Assuming 'balls' is a column name
         strikes = row['Strikes']  # Assuming 'strikes' is a column name
-        foul_value = foul_values.get((balls, strikes), 'default')
-        starting_value = starting_values.get((balls, strikes), 'default')
+        foul_value = foul_values.get((balls, strikes), 0)
+        starting_value = starting_values.get((balls, strikes), 0)
 
         # Compute 'I' based on the logic provided
         I = (
@@ -460,9 +460,9 @@ class Driver:
     def calculate_row_I_swing(self, row, foul_values, starting_values, strike_values):
         balls = row['Balls']  # Assuming 'balls' is a column name
         strikes = row['Strikes']  # Assuming 'strikes' is a column name
-        foul_value = foul_values.get((balls, strikes), 'default')
-        strike_value = strike_values.get((balls, strikes), 'default')
-        starting_value = starting_values.get((balls, strikes), 'default')
+        foul_value = foul_values.get((balls, strikes), 0)
+        strike_value = strike_values.get((balls, strikes), 0)
+        starting_value = starting_values.get((balls, strikes), 0)
 
         # Compute 'I' based on the logic provided
         I = (
@@ -608,8 +608,8 @@ class Driver:
             (3, 1): 0.219,
             (3, 2): 0.305,
         }
-        df2['strike_value'] = df2.apply(lambda row: strike_values.get((row['Balls'], row['Strikes']), 'default'), axis=1)
-        df2['ball_value'] = df2.apply(lambda row: ball_values.get((row['Balls'], row['Strikes']), 'default'), axis=1)
+        df2['strike_value'] = df2.apply(lambda row: strike_values.get((row['Balls'], row['Strikes']), 0), axis=1)
+        df2['ball_value'] = df2.apply(lambda row: ball_values.get((row['Balls'], row['Strikes']), 0), axis=1)
 
         # Condition to apply to each row for the 'take_loc_I' column
         conditions = (
@@ -636,7 +636,7 @@ class Driver:
         }
         df2['Swing'] = df2['PitchCall'].replace(value_map)
         # df2['Swing'] = df2['PitchCall'].replace(value_map)
-        self.database_driver.write_data(df2, 'variable')
+        self.database_driver.write_data_table(df2, 'variable', 2)
         # print (df2.head ().to_string ())
 
     def train_classifier_swing_diff (self):
@@ -727,12 +727,12 @@ class Driver:
         # Create a new column for each class probability
         for i, class_label in enumerate(class_labels):
            df2[f'Prob_swing_{class_label}'] = probabilities[:, i]
-        self.database_driver.write_data(df2, 'variable')
+        self.database_driver.write_data_table (df2, 'variable', 2)
     def calculate_credit (self):
         df2 = self.database_driver.read_variable_data('variable')
         df2 ['adj_Prob_Swing'] = np.minimum (df2 ['Prob_swing_1'], 0.95) - 0.5
         df2 ['Credit'] = df2 ['adj_Prob_Swing'] * (df2 ['Swing'] * 2 - 1)
-        self.database_driver.write_data(df2, 'variable')
+        self.database_driver.write_data_table (df2, 'variable', 2)
 
     def aggregate_credit (self):
         df2 = self.database_driver.read_variable_data('variable')
