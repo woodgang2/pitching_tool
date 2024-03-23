@@ -252,8 +252,7 @@ if not st.session_state.team_flag:
             columns_to_drop = [column for column in stuff_df.columns if column.endswith('Usage')]
             stuff_df = stuff_df.drop(columns=columns_to_drop)
             stuff_df = stuff_df.dropna(axis=1)
-            preferred_order = ['Fastball', 'Curveball', 'Slider', 'ChangeUp', 'Cutter']
-            actual_order = [col for col in preferred_order if col in stuff_df.columns]
+            actual_order = [col for col in desired_order if col in stuff_df.columns]
             stuff_df = stuff_df[actual_order]
             # st.markdown("""
             #     <style>
