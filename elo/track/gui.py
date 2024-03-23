@@ -230,6 +230,7 @@ if not st.session_state.team_flag:
 
         else:
             stuff_df = driver.retrieve_stuff (name)
+            stuff_df = stuff_df.round(0)
             # stuff_df = pitching_stuff_df [pitching_stuff_df ['Pitcher'] == name]
             stuff_df = stuff_df.drop_duplicates ('Pitcher')
             stuff_df = stuff_df.drop (columns = ['Pitcher', 'PitcherTeam', 'PitcherThrows'])
@@ -316,6 +317,7 @@ else:
             st.error(f'{team_name} not found. Remember that the name is case sensitive')
         else:
             stuff_df = driver.retrieve_stuff_team (team_name)
+            stuff_df = stuff_df.round(0)
             # stuff_df = pitching_stuff_df [pitching_stuff_df ['PitchingTeam'] == team_name]
             if team_name != 'All':
                 stuff_df = stuff_df.drop (columns = ['PitcherTeam'])
