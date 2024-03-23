@@ -318,6 +318,17 @@ else:
         else:
             stuff_df = driver.retrieve_stuff_team (team_name)
             stuff_df = stuff_df.round(0)
+            rename_columns = {
+                'ChangeUp': 'CH',
+                'Curveball': 'CU',
+                'Cutter' : 'FC',
+                'Four-Seam' : 'FF',
+                'Sinker' : 'SI',
+                'Slider' : 'SL',
+                'Splitter' : 'FS'
+            }
+            desired_order = ['Pitcher', 'PitcherTeam', 'PitcherThrows', 'PitchCount', 'Overall', 'FF', 'SI', 'FC', 'SL', 'CU', 'FS', 'CH']
+            stuff_df = stuff_df.rename(columns=rename_columns)
             # stuff_df = pitching_stuff_df [pitching_stuff_df ['PitchingTeam'] == team_name]
             if team_name != 'All':
                 stuff_df = stuff_df.drop (columns = ['PitcherTeam'])
@@ -329,6 +340,7 @@ else:
                     stuff_df = stuff_df [stuff_df ['PitchCount'] >= min_pitch]
                 except ValueError:
                     st.error("Invalid number for the minimum pitch count.")
+            stuff_df = stuff_df[desired_order]
             container = st.container()
             container.markdown("<div margin-left: auto, margin-right: auto>", unsafe_allow_html=True)
             container.dataframe(stuff_df)
