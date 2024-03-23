@@ -121,7 +121,8 @@ pitching_stuff_df ['Role'] = 'Pitcher'
 pitching_stuff_df ['Name'] = pitching_stuff_df ['Pitcher']
 pitching_stuff_df ['Team'] = pitching_stuff_df ['PitcherTeam']
 combined_df = pd.concat([batting_percentiles_df, pitching_stuff_df])
-combined_df = combined_df.sort_values(by='Name')
+combined_df['Name_Sorted'] = combined_df['Name'].str.lstrip()
+combined_df = combined_df.sort_values(by='Name_Sorted')
 combined_df.reset_index(drop=True, inplace=True)
 combined_names = combined_df.apply(lambda x: f"{' '.join(x['Name'].split(', ')[::-1])} - {x['Team']}, {x['Role']}", axis=1)
 combined_dict = dict(zip(combined_names, combined_df['Name']))
