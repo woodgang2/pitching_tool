@@ -136,7 +136,7 @@ combined_dict = dict(zip(combined_names, combined_df['Name']))
 # combined_dict = {**batting_dict, **pitching_dict}
 
 pitching_stuff_df = pitching_stuff_df [pitching_stuff_df ['PitcherTeam'] != 'VIR_CAV']
-team_names = pitching_stuff_df ['PitcherTeam'].sort_values().unique().tolist()
+team_names = sorted (pitching_stuff_df ['PitcherTeam'].unique().tolist())
 options_teams = ['', 'All', 'VIR_CAV'] + team_names
 # Combine into a single series
 # combined_names = pd.concat([batting_names, pitching_names]).sort_values().unique()
