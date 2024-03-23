@@ -241,7 +241,7 @@ if not st.session_state.team_flag:
                 'Slider' : 'SL',
                 'Splitter' : 'FS'
             }
-            desired_order = ['PitchCount', 'Overall', 'FF', 'SI', 'FC', 'SL', 'CU', 'FS', 'CH']
+            desired_order = ['PitchCount', 'Overall Stuff', 'FF', 'SI', 'FC', 'SL', 'CU', 'FS', 'CH']
             stuff_df = stuff_df.rename(columns=rename_columns)
 
             # stuff_df = pitching_stuff_df [pitching_stuff_df ['Pitcher'] == name]
@@ -265,7 +265,7 @@ if not st.session_state.team_flag:
             #     }
             #     </style>
             #     """, unsafe_allow_html=True)
-            container = st.empty ()
+            # container = st.empty ()
             container = st.container()
             container.markdown("<div margin-left: auto, margin-right: auto>", unsafe_allow_html=True)
             container.dataframe(stuff_df)
