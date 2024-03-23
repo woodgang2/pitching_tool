@@ -114,19 +114,32 @@ pitching_stuff_df = driver.retrieve_stuff_team ('All')
 # combined_names_raw = pd.concat([batting_names_raw, pitching_names_raw])
 # Extract names and teams, and add a label for type
 
-batting_names = batting_percentiles_df.apply(lambda x: f"{' '.join(x['Batter'].split(', ')[::-1])} - {x['BatterTeam']}, Batter", axis=1)
-# batting_dict = {f"{' '.join(x['Batter'].split(', ')[::-1])} - {x[f'BatterTeam']}, Batter": x['Batter'] for _, x in batting_percentiles_df.iterrows()}
-pitching_names = pitching_stuff_df.apply(lambda x: f"{' '.join(x['Pitcher'].split(', ')[::-1])} - {x['PitcherTeam']}, Pitcher", axis=1)
-# pitching_dict = {f"{' '.join(x['Pitcher'].split(', ')[::-1])} - {x[f'PitcherTeam']}, Pitcher": x['Pitcher'] for _, x in pitching_stuff_df.iterrows()}
-batting_dict = dict(zip(batting_names, batting_percentiles_df['Batter']))
-pitching_dict = dict(zip(pitching_names, pitching_stuff_df['Pitcher']))
-combined_dict = {**batting_dict, **pitching_dict}
+batting_percentiles_df ['Role'] = 'Batter'
+batting_percentiles_df ['Name'] = batting_percentiles_df ['Batter']
+batting_percentiles_df ['Team'] = batting_percentiles_df ['BatterTeam']
+pitching_stuff_df ['Role'] = 'Pitcher'
+pitching_stuff_df ['Name'] = pitching_stuff_df ['Pitcher']
+pitching_stuff_df ['Team'] = pitching_stuff_df ['PitcherTeam']
+combined_df = pd.concat([batting_percentiles_df, pitching_stuff_df])
+combined_df = combined_df.sort_values(by='Name')
+combined_df.reset_index(drop=True, inplace=True)
+combined_names = combined_df.apply(lambda x: f"{' '.join(x['Name'].split(', ')[::-1])} - {x['Team']}, {x['Role']}", axis=1)
+combined_dict = dict(zip(combined_names, combined_df['Name']))
+
+# batting_names = batting_percentiles_df.apply(lambda x: f"{' '.join(x['Batter'].split(', ')[::-1])} - {x['BatterTeam']}, Batter", axis=1)
+# # batting_dict = {f"{' '.join(x['Batter'].split(', ')[::-1])} - {x[f'BatterTeam']}, Batter": x['Batter'] for _, x in batting_percentiles_df.iterrows()}
+# pitching_names = pitching_stuff_df.apply(lambda x: f"{' '.join(x['Pitcher'].split(', ')[::-1])} - {x['PitcherTeam']}, Pitcher", axis=1)
+# # pitching_dict = {f"{' '.join(x['Pitcher'].split(', ')[::-1])} - {x[f'PitcherTeam']}, Pitcher": x['Pitcher'] for _, x in pitching_stuff_df.iterrows()}
+# batting_dict = dict(zip(batting_names, batting_percentiles_df['Batter']))
+# pitching_dict = dict(zip(pitching_names, pitching_stuff_df['Pitcher']))
+# combined_dict = {**batting_dict, **pitching_dict}
+
 pitching_stuff_df = pitching_stuff_df [pitching_stuff_df ['PitcherTeam'] != 'VIR_CAV']
 team_names = pitching_stuff_df ['PitcherTeam'].unique().tolist()
 options_teams = ['', 'All', 'VIR_CAV'] + team_names
 # Combine into a single series
-combined_names = pd.concat([batting_names, pitching_names])#.sort_values().unique()
-combined_names = pd.concat([batting_names, pitching_names]).sort_values().unique()
+# combined_names = pd.concat([batting_names, pitching_names]).sort_values().unique()
+
 # options = list(zip(combined_names, combined_names_raw))
 # options_sorted = sorted(options, key=lambda x: x[1])
 options = [''] + list(combined_names)
