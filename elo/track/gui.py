@@ -265,7 +265,7 @@ if not st.session_state.team_flag:
             #     }
             #     </style>
             #     """, unsafe_allow_html=True)
-            # container = st.empty ()
+            container = st.empty ()
             container = st.container()
             container.markdown("<div margin-left: auto, margin-right: auto>", unsafe_allow_html=True)
             container.dataframe(stuff_df)
