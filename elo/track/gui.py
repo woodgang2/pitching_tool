@@ -231,6 +231,19 @@ if not st.session_state.team_flag:
         else:
             stuff_df = driver.retrieve_stuff (name)
             stuff_df = stuff_df.round(0)
+
+            rename_columns = {
+                'ChangeUp': 'CH',
+                'Curveball': 'CU',
+                'Cutter' : 'FC',
+                'Four-Seam' : 'FF',
+                'Sinker' : 'SI',
+                'Slider' : 'SL',
+                'Splitter' : 'FS'
+            }
+            desired_order = ['PitchCount', 'Overall', 'FF', 'SI', 'FC', 'SL', 'CU', 'FS', 'CH']
+            stuff_df = stuff_df.rename(columns=rename_columns)
+
             # stuff_df = pitching_stuff_df [pitching_stuff_df ['Pitcher'] == name]
             stuff_df = stuff_df.drop_duplicates ('Pitcher')
             stuff_df = stuff_df.drop (columns = ['Pitcher', 'PitcherTeam', 'PitcherThrows'])
@@ -239,6 +252,9 @@ if not st.session_state.team_flag:
             columns_to_drop = [column for column in stuff_df.columns if column.endswith('Usage')]
             stuff_df = stuff_df.drop(columns=columns_to_drop)
             stuff_df = stuff_df.dropna(axis=1)
+            preferred_order = ['Fastball', 'Curveball', 'Slider', 'ChangeUp', 'Cutter']
+            actual_order = [col for col in preferred_order if col in stuff_df.columns]
+            stuff_df = stuff_df[actual_order]
             # st.markdown("""
             #     <style>
             #     .centered-df {
