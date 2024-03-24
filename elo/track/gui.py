@@ -88,10 +88,10 @@ driver = database_driver.DatabaseDriver()
 stuff_driver = stuff_plus.Driver('radar2.db', 'radar_data')
 # Update dataset button
 col1, col2, space = st.columns([2, 2, 2])
-with col1:
-    update = st.button("Update Dataset", key='update_dataset', type = 'primary')
-    if update:
-        st.write (f"I'm just a placeholder button")
+# with col1:
+#     update = st.button("Update Dataset", key='update_dataset', type = 'primary')
+#     if update:
+#         st.write (f"I'm just a placeholder button")
         # st.write('Updating. May take a while')
         # driver.read_data()
         # stuff_plus.process_data()
@@ -265,7 +265,7 @@ if not st.session_state.team_flag:
             #     }
             #     </style>
             #     """, unsafe_allow_html=True)
-            container = st.empty ()
+            # container = st.empty ()
             container = st.container()
             container.markdown("<div margin-left: auto, margin-right: auto>", unsafe_allow_html=True)
             container.dataframe(stuff_df)
