@@ -382,7 +382,7 @@ class Driver:
         #     self.input_variables_df[f'Prob_{class_label}'] = probabilities[:, i]
 
     def predict_intrinsic_values (self):
-        model_filename = f'JobLib_Model/joblib_model_intrinsic_value.joblib'
+        model_filename = f'JobLib_Model_Stuff/joblib_model_intrinsic_value.joblib'
         # self.model.load_model (model_filename)
         clf = joblib.load (model_filename)
         features = ['ExitSpeed', 'Angle', 'Direction']
@@ -408,8 +408,8 @@ class Driver:
         # print (columns_to_append)
         # batting_variables_df = pd.concat([batting_variables_df, columns_to_append], ignore_index=True)
 
-        model_R = joblib.load('JobLib_Model/joblib_model_R_loc.joblib')
-        model_L = joblib.load('JobLib_Model/joblib_model_L_loc.joblib')
+        model_R = joblib.load('JobLib_Model_Stuff/joblib_model_R_loc.joblib')
+        model_L = joblib.load('JobLib_Model_Stuff/joblib_model_L_loc.joblib')
 
         # Features to use for predictions
         features = ['PlateLocHeight', 'PlateLocSide']
@@ -718,7 +718,7 @@ class Driver:
     def predict_swing (self):
         df2 = self.database_driver.read_variable_data('variable')
         # df2.drop (['Prob_swing_0', 'Prob_swing_1'], axis = 1)
-        model_filename = f'JobLib_Model/joblib_model_swing_diff.joblib'
+        model_filename = f'JobLib_Model_Stuff/joblib_model_swing_diff.joblib'
         # self.model.load_model (model_filename)
         clf = joblib.load (model_filename)
         features = ['Balls', "Strikes", 'swing_difference']

@@ -53,7 +53,7 @@ def calculate_averages(row, averages_df):
     return row
 
 class Driver:
-    def __init__(self, db_file, radar_table_name, focus = Focus.Stuff):
+    def __init__(self, db_file, radar_table_name, focus = Focus.Location):
         self.db_file = db_file
         self.table_name = radar_table_name
         self.radar_df = []
@@ -62,9 +62,7 @@ class Driver:
         self.current_pitch_class = 'None'
         self.currently_modeling = 'None'
         self.focus = focus
-        self.context_features = []
-        if (focus != Focus.Stuff):
-            self.context_features = ['Balls', 'Strikes', 'PlateLocHeight', 'PlateLocSide']
+        self.context_features = ['Balls', 'Strikes', 'PlateLocHeight', 'PlateLocSide']
         self.params = {}
         self.current_df = []
         self.multi = False
@@ -200,7 +198,7 @@ class Driver:
         self.predictions_df = self.predictions_df.drop_duplicates(subset='PitchUID')
         pbar.close()
         conn.close()
-        # self.write_predictions(Focus.Stuff)
+        # self.write_predictions(Focus.Location)
         # self.predictions_df = self.predictions_df [self.predictions_df ["PitchType"] == "Four-Seam"]
         # sns.jointplot(data=self.predictions_df, x='AxisDifference', y='SpinEfficiency', kind='hex', gridsize=50, cmap='inferno', C=self.predictions_df['Prob_SwingingStrike'], marginal_kws=dict(bins=50, fill=True))
         # plt.colorbar(label='Prob_SwingingStrike').set_label(label='xWhiff%', size=20)
@@ -219,7 +217,7 @@ class Driver:
         #     cmap='RdYlBu',  # Color map
         #     extent=[-50, 75, 0, 100],
         #     fill = True,
-            # reduce_C_function=np.mean  # Use mean for the color intensity
+        # reduce_C_function=np.mean  # Use mean for the color intensity
         # )
 
         # Add a color bar to the plot
@@ -244,7 +242,7 @@ class Driver:
         self.radar_df = self.radar_df.dropna(subset=['pfxx'])
         self.radar_df['InferredSpinAxis'] = np.where(self.radar_df['pfxx'] < 0,
                                                      (np.arctan(self.radar_df['pfxz'] / self.radar_df['pfxx']) * 180 / math.pi + 90) + 180,
-                                                    np.arctan (self.radar_df['pfxz'] / self.radar_df['pfxx']) * 180 / math.pi + 90)
+                                                     np.arctan (self.radar_df['pfxz'] / self.radar_df['pfxx']) * 180 / math.pi + 90)
         # print (self.radar_df)
 
     def calculate_seam_shifted_wake (self):
@@ -450,8 +448,8 @@ class Driver:
             'HorzBreak': f'Average{pitch_type}HB'
         }, inplace=True)
         print ('RelSpeed:', f'Average{pitch_type}RS',
-        'InducedVertBreak:', f'Average{pitch_type}IVB',
-        'HorzBreak:', f'Average{pitch_type}HB')
+               'InducedVertBreak:', f'Average{pitch_type}IVB',
+               'HorzBreak:', f'Average{pitch_type}HB')
         # Step 2: Merge the averages back into the original DataFrame
         self.radar_df = pd.merge(self.radar_df, four_seam_averages, on='Pitcher', how='left')
         print (self.radar_df)
@@ -478,17 +476,17 @@ class Driver:
                                                  0,
                                                  self.radar_df['HorzBreak'] - self.radar_df['AverageFastballHB_y'])
     def write_radar_data (self):
-            chunk_size = 1000  # Adjust based on your needs and system capabilities
-            num_chunks = len(self.radar_df) // chunk_size + 1
-            conn = sqlite3.connect(f'{self.db_file}')
-            conn.execute(f'DROP TABLE IF EXISTS radar_data')
-            with tqdm(total=len(self.radar_df), desc="Writing to database") as pbar:
-                for start in range(0, len(self.radar_df), chunk_size):
-                    end = min(start + chunk_size, len(self.radar_df))
-                    chunk = self.radar_df.iloc[start:end]
-                    chunk.to_sql('radar_data', conn, if_exists='append', index=False)
-                    pbar.update(len(chunk))
-            conn.close()
+        chunk_size = 1000  # Adjust based on your needs and system capabilities
+        num_chunks = len(self.radar_df) // chunk_size + 1
+        conn = sqlite3.connect(f'{self.db_file}')
+        conn.execute(f'DROP TABLE IF EXISTS radar_data')
+        with tqdm(total=len(self.radar_df), desc="Writing to database") as pbar:
+            for start in range(0, len(self.radar_df), chunk_size):
+                end = min(start + chunk_size, len(self.radar_df))
+                chunk = self.radar_df.iloc[start:end]
+                chunk.to_sql('radar_data', conn, if_exists='append', index=False)
+                pbar.update(len(chunk))
+        conn.close()
 
     def write_variable_data (self, table = 'variables'):#_Pitchers'):
         # numeric_cols = self.input_variables_df.select_dtypes(include='number').columns.tolist()
@@ -512,7 +510,7 @@ class Driver:
                 pbar.update(len(chunk))
         conn.close()
 
-    def write_predictions_players (self, focus=Focus.Stuff):
+    def write_predictions_players (self, focus=Focus.Location):
         numeric_cols = self.predictions_df.select_dtypes(include='number').columns.tolist()
         #
         # averages_df = self.predictions_df.groupby(['Pitcher', 'PitchType'])[numeric_cols].mean().reset_index()
@@ -595,7 +593,7 @@ class Driver:
     #TODO: this, um, does not work, but I thought about it and I'm not actually sure it's necessary
     def find_overall_percentiles (self):
         conn = sqlite3.connect(f'{self.db_file}')
-        table_name = 'Stuff_Probabilities_Pitchers'
+        table_name = 'Location_Probabilities_Pitchers'
         df = pd.read_sql_query(f"SELECT * FROM {table_name}", conn)
         conn.close ()
         # df['New Prob'] = df['Usage'] * df['Prob']
@@ -610,11 +608,11 @@ class Driver:
         # Calculate 'New Prob' based on 'Usage' and 'Prob'
         df_long['New Prob'] = df_long['Usage'] * df_long['Prob']
 
-                # Group by Pitcher and ProbType, then aggregate 'New Prob' by summing
+        # Group by Pitcher and ProbType, then aggregate 'New Prob' by summing
         df = df_long.groupby(['Pitcher', 'ProbType'])['New Prob'].sum().reset_index()
 
-        self.write_df(df, 'Stuff_Probabilities_Pitchers_No_Pitch_Type')
-    def write_predictions (self, focus=Focus.Stuff):
+        self.write_df(df, 'Location_Probabilities_Pitchers_No_Pitch_Type')
+    def write_predictions (self, focus=Focus.Location):
         table = f'{focus.name}_Probabilities'
         chunk_size = 1000  # Adjust based on your needs and system capabilities
         num_chunks = len(self.predictions_df) // chunk_size + 1
@@ -629,7 +627,7 @@ class Driver:
         conn.close()
 
     def write_df (self, df, table):
-        def write_predictions (self, focus=Focus.Stuff):
+        def write_predictions (self, focus=Focus.Location):
             table = f'{focus.name}_Probabilities'
         chunk_size = 1000  # Adjust based on your needs and system capabilities
         num_chunks = len(df) // chunk_size + 1
@@ -644,7 +642,7 @@ class Driver:
         conn.close()
 
 
-    def write_players (self, focus=Focus.Stuff):
+    def write_players (self, focus=Focus.Location):
         table = f'Pitcher_{focus.name}_Ratings_20_80_scale'
         # table = f'Pitcher_{focus.name}_Ratings_100_scale'
         chunk_size = 1000  # Adjust based on your needs and system capabilities
@@ -659,9 +657,9 @@ class Driver:
                 pbar.update(len(chunk))
         conn.close()
 
-    def write_percentiles (self, focus=Focus.Stuff):
+    def write_percentiles (self, focus=Focus.Location):
         final_columns = ['Pitcher', 'PitcherTeam', 'PitcherThrows', 'PitchType', 'Usage'] + \
-                        [col for col in self.percentiles_df.columns if col not in ['Pitcher', 'PitcherTeam', 'PitcherThrows', 'PitchType', 'Usage', 'EV', 'xRV', 'average_xRV']] +\
+                        [col for col in self.percentiles_df.columns if col not in ['Pitcher', 'PitcherTeam', 'PitcherThrows', 'PitchType', 'Usage', 'EV', 'xRV', 'average_xRV']] + \
                         ['xRV']
         self.percentiles_df = self.percentiles_df[final_columns]
         table = f'Percentiles_{focus.name}_Pitchers'
@@ -748,7 +746,7 @@ class Driver:
             (self.input_variables_df['PitchCall'] == 'Ball') |
             (self.input_variables_df['PitchCall'] == 'StrikeCalled') |
             (self.input_variables_df['PitchCall'] == 'HitByPitch')
-        ]
+            ]
         value_map = {
             'HitByPitch' : 2,
             'Ball' : 1,
@@ -914,9 +912,7 @@ class Driver:
     #
     def clean_data_for_fastballs (self):
         self.features = [
-            'PitchType', 'PitcherThrows', 'BatterSide', 'RelSpeed', 'InducedVertBreak', 'HorzBreak',
-            'SpinRate', 'SpinEfficiency', 'AxisDifference', 'RelHeight', 'RelSide',
-            'Extension', 'VAA'
+            'PitchType', 'PitcherThrows', 'BatterSide'
         ]
         self.features.extend (self.context_features)
         # print (self.current_df.to_string ())
@@ -937,9 +933,7 @@ class Driver:
 
     def clean_data_for_breakingballs (self):
         self.features = [
-            'PitchType', 'PitcherThrows', 'BatterSide', 'RelSpeed', 'InducedVertBreak', 'HorzBreak',
-            'SpinRate', 'SpinEfficiency', 'AxisDifference', 'RelHeight', 'RelSide',
-            'Extension', 'DifferenceRS', 'DifferenceIVB', 'DifferenceHB'
+            'PitchType', 'PitcherThrows', 'BatterSide'
         ]
         self.features.extend (self.context_features)
         self.current_df = self.current_df[
@@ -951,9 +945,7 @@ class Driver:
 
     def clean_data_for_offspeed (self):
         self.features = [
-            'PitchType', 'PitcherThrows', 'BatterSide', 'RelSpeed', 'InducedVertBreak', 'HorzBreak',
-            'SpinRate', 'SpinEfficiency', 'AxisDifference', 'RelHeight', 'RelSide',
-            'Extension', 'DifferenceRS', 'DifferenceIVB', 'DifferenceHB'
+            'PitchType', 'PitcherThrows', 'BatterSide'
         ]
         self.features.extend (self.context_features)
         self.current_df = self.current_df[
@@ -1022,7 +1014,7 @@ class Driver:
         # model_filename = f'{self.focus.name}_{self.currently_modeling}-{self.current_pitch_class}.json' # or use .bin for binary format
         best_model.save_model(model_filename)
 
-        model_directory = "JobLib_Model_Stuff"
+        model_directory = "JobLib_Model_Location"
         if not os.path.exists(model_directory):
             os.makedirs(model_directory)
         model_filename = os.path.join(model_directory, f'joblib_model_{self.focus.name}_{self.currently_modeling}--{self.current_pitch_class}.joblib')
@@ -1055,10 +1047,10 @@ class Driver:
         self.write_current_data(f'{self.focus.name}_{self.currently_modeling}-{self.current_pitch_class}')
 
     #post prediction flowchart
-    # predictions -> Stuff_Probabilities
-    # -> Stuff_Probabilities_Pitchers
-    # -> Pitcher_Stuff_Ratings_20_80
-    # -> Percentiles_Stuff_Pitchers
+    # predictions -> Location_Probabilities
+    # -> Location_Probabilities_Pitchers
+    # -> Pitcher_Location_Ratings_20_80
+    # -> Percentiles_Location_Pitchers
     def load_predictions (self):
         predictions_df = self.input_variables_df
         # new_columns = ['Prob_SwingingStrike', 'Prob_Contact', 'Prob_InPlay', 'Prob_Foul', 'Prob_SoftGB', 'Prob_HardGB', 'Prob_SoftLD', 'Prob_HardLD','Prob_SoftFB', 'Prob_HardFB']
@@ -1068,29 +1060,29 @@ class Driver:
         #     predictions_df[column] = np.nan
 
         conn = sqlite3.connect(f'{self.db_file}')
-        CBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Stuff_Contact-BreakingBall"', conn)
+        CBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Contact-BreakingBall"', conn)
         CBB_df = CBB_df.rename (columns = {"Prob_0" : "xWhiff%", "Prob_1" : "Prob_Contact"})
-        CF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Stuff_Contact-Fastball"', conn)
+        CF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Contact-Fastball"', conn)
         CF_df = CF_df.rename (columns = {"Prob_0" : "xWhiff%", "Prob_1" : "Prob_Contact"})
-        CO_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Stuff_Contact-Offspeed"', conn)
+        CO_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Contact-Offspeed"', conn)
         CO_df = CO_df.rename (columns = {"Prob_0" : "xWhiff%", "Prob_1" : "Prob_Contact"})
         con_df = pd.concat([CF_df, CBB_df, CO_df], axis=0)
         con_df.reset_index(drop=True, inplace=True)
 
-        FBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Stuff_Foul-BreakingBall"', conn)
+        FBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Foul-BreakingBall"', conn)
         FBB_df = FBB_df.rename (columns = {"Prob_0" : "Prob_InPlay", "Prob_1" : "xFoul%"})
-        FF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Stuff_Foul-Fastball"', conn)
+        FF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Foul-Fastball"', conn)
         FF_df = FF_df.rename (columns = {"Prob_0" : "Prob_InPlay", "Prob_1" : "xFoul%"})
-        FO_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Stuff_Foul-Offspeed"', conn)
+        FO_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Foul-Offspeed"', conn)
         FO_df = FO_df.rename (columns = {"Prob_0" : "Prob_InPlay", "Prob_1" : "xFoul%"})
         foul_df = pd.concat([FF_df, FBB_df, FO_df], axis=0)
         foul_df.reset_index(drop=True, inplace=True)
 
-        IBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2", "Prob_3", "Prob_4", "Prob_5", "Target" FROM "Stuff_InPlay-BreakingBall"', conn)
+        IBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2", "Prob_3", "Prob_4", "Prob_5", "Target" FROM "Location_InPlay-BreakingBall"', conn)
         IBB_df = IBB_df.rename (columns = {"Prob_0" : "Prob_SoftGB", "Prob_1" : "Prob_HardGB", "Prob_2" : "Prob_SoftLD", "Prob_3" : "Prob_HardLD", "Prob_4" : "Prob_SoftFB", "Prob_5" : "Prob_HardFB"})
-        IF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2", "Prob_3", "Prob_4", "Prob_5", "Target" FROM "Stuff_InPlay-Fastball"', conn)
+        IF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2", "Prob_3", "Prob_4", "Prob_5", "Target" FROM "Location_InPlay-Fastball"', conn)
         IF_df = IF_df.rename (columns = {"Prob_0" : "Prob_SoftGB", "Prob_1" : "Prob_HardGB", "Prob_2" : "Prob_SoftLD", "Prob_3" : "Prob_HardLD", "Prob_4" : "Prob_SoftFB", "Prob_5" : "Prob_HardFB"})
-        IO_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2", "Prob_3", "Prob_4", "Prob_5", "Target" FROM "Stuff_InPlay-Offspeed"', conn)
+        IO_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2", "Prob_3", "Prob_4", "Prob_5", "Target" FROM "Location_InPlay-Offspeed"', conn)
         IO_df = IO_df.rename (columns = {"Prob_0" : "Prob_SoftGB", "Prob_1" : "Prob_HardGB", "Prob_2" : "Prob_SoftLD", "Prob_3" : "Prob_HardLD", "Prob_4" : "Prob_SoftFB", "Prob_5" : "Prob_HardFB"})
         inplay_df = pd.concat([IF_df, IBB_df, IO_df], axis=0)
         inplay_df.reset_index(drop=True, inplace=True)
@@ -1224,7 +1216,7 @@ class Driver:
         # exit (0)
         self.players_df = players_df
 
-    def calculate_percentiles (self, focus=Focus.Stuff):
+    def calculate_percentiles (self, focus=Focus.Location):
         print ("Reading player predictions")
         table_name = f'{focus.name}_Probabilities_Pitchers'
         conn = sqlite3.connect(f'{self.db_file}')
@@ -1268,10 +1260,10 @@ class Driver:
         # df.loc[duplicates, columns_to_nan] = np.nan
 
 
-# print (players_df)
+        # print (players_df)
         # exit (0)
         def calculate_percentiles(df, group_field):
-        # Group the DataFrame by PitchType and then apply the percentile function
+            # Group the DataFrame by PitchType and then apply the percentile function
             percentiles_df = df.groupby(group_field).transform(lambda x: round(100*x.rank(pct=True),0) if np.issubdtype(x.dtype, np.number) else x)
             # Keep non-numeric columns as they are
             for col in df.columns:
@@ -1290,10 +1282,10 @@ class Driver:
         data = {
             'horizontal_break': np.random.randn(1000),
             'vertical_break': np.random.randn(1000),
-            'stuff_plus': np.random.rand(1000) * 200  # Stuff+ values from 0 to 200
+            'Location_plus': np.random.rand(1000) * 200  # Location+ values from 0 to 200
         }
         df = pd.DataFrame(data)
-        # Modify the colormap to center the yellow color at 0 Stuff+
+        # Modify the colormap to center the yellow color at 0 Location+
 
         # Now let's modify the hexbin plot to use the data from the DataFrame
         plt.figure(figsize=(10, 8))
@@ -1349,12 +1341,12 @@ class Driver:
 
         plt.show()
 
-    def load_model (self, focus = 'Stuff', step = 'Contact', type = 'BreakingBall'):
-        model_filename = f'JobLib_Model_Stuff/joblib_model_{self.focus.name}_{self.currently_modeling}--{self.current_pitch_class}.joblib'
+    def load_model (self, focus = 'Location', step = 'Contact', type = 'BreakingBall'):
+        model_filename = f'JobLib_Model/joblib_model_{self.focus.name}_{self.currently_modeling}--{self.current_pitch_class}.joblib'
         # self.model.load_model (model_filename)
         self.model = joblib.load (model_filename)
-    def generate_predictions (self, focus = 'Stuff', step = 'Contact', type = 'BreakingBall'):
-        # self.focus = Focus.Stuff
+    def generate_predictions (self, focus = 'Location', step = 'Contact', type = 'BreakingBall'):
+        # self.focus = Focus.Location
         # self.currently_modeling = step
         # self.current_pitch_class = type
         features = self.features + self.context_features
@@ -1379,18 +1371,18 @@ class Driver:
         self.write_current_data(f'{self.focus.name}_{self.currently_modeling}-{self.current_pitch_class}')
 
 # xgb_clf = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-        # xgb.set_config(verbosity=1)
-        # xgb_clf.fit(X_train, y_train)
-        # y_pred_proba = xgb_clf.predict_proba(X_test)[:, 1]  # Probability of making contact
-        # roc_auc = roc_auc_score(y_test, y_pred_proba)
-        # print (roc_auc)
+# xgb.set_config(verbosity=1)
+# xgb_clf.fit(X_train, y_train)
+# y_pred_proba = xgb_clf.predict_proba(X_test)[:, 1]  # Probability of making contact
+# roc_auc = roc_auc_score(y_test, y_pred_proba)
+# print (roc_auc)
 ['InPlay' 'FoulBallNotFieldable' 'StrikeCalled' 'BallCalled'
  'StrikeSwinging' 'HitByPitch' 'FoulBall' 'BallinDirt' 'FoulBallFieldable'
  'BallIntentional' 'Undefined' 'WildPitch' 'CatchersInterference'
  'BattersInterference' 'SwinginStrike' 'StirkeCalled']
 
-def train_model (focus=Focus.Stuff):
-    driver = Driver ('radar2.db', 'radar_data', focus)
+def train_model (focus=Focus.Location):
+    driver = Driver ('radar4.db', 'radar_data', focus)
     # driver.read_radar_data()
     # driver.load_relevant_data()
     # driver.write_variable_data()
@@ -1399,37 +1391,37 @@ def train_model (focus=Focus.Stuff):
     driver.clean_data_for_contact_model()
     driver.clean_data_for_fastballs()
     driver.train_classifier()
-    # driver.clean_data_for_contact_model()
-    # driver.clean_data_for_breakingballs()
-    # driver.train_classifier()
-    # driver.clean_data_for_contact_model()
-    # driver.clean_data_for_offspeed()
-    # driver.train_classifier()
+    driver.clean_data_for_contact_model()
+    driver.clean_data_for_breakingballs()
+    driver.train_classifier()
+    driver.clean_data_for_contact_model()
+    driver.clean_data_for_offspeed()
+    driver.train_classifier()
 
     driver.read_variable_data()
     driver.clean_data_for_foul_model()
     driver.clean_data_for_fastballs()
     driver.train_classifier()
-    # driver.clean_data_for_foul_model()
-    # driver.clean_data_for_breakingballs()
-    # driver.train_classifier()
-    # driver.clean_data_for_foul_model()
-    # driver.clean_data_for_offspeed()
-    # driver.train_classifier()
+    driver.clean_data_for_foul_model()
+    driver.clean_data_for_breakingballs()
+    driver.train_classifier()
+    driver.clean_data_for_foul_model()
+    driver.clean_data_for_offspeed()
+    driver.train_classifier()
 
     driver.read_variable_data()
     driver.clean_data_for_in_play_model()
     driver.clean_data_for_fastballs()
     driver.train_classifier()
-    # driver.clean_data_for_in_play_model()
-    # driver.clean_data_for_breakingballs()
-    # driver.train_classifier()
-    # driver.clean_data_for_in_play_model()
-    # driver.clean_data_for_offspeed()
-    # driver.train_classifier()
+    driver.clean_data_for_in_play_model()
+    driver.clean_data_for_breakingballs()
+    driver.train_classifier()
+    driver.clean_data_for_in_play_model()
+    driver.clean_data_for_offspeed()
+    driver.train_classifier()
 
-def run_model (focus=Focus.Stuff):
-    driver = Driver ('radar2.db', 'radar_data', focus)
+def run_model (focus=Focus.Location):
+    driver = Driver ('radar4.db', 'radar_data', focus)
     # driver.read_radar_data()
     # driver.load_relevant_data()
     # driver.write_variable_data()
@@ -1477,27 +1469,27 @@ def run_model (focus=Focus.Stuff):
     driver.generate_predictions()
     return driver
 
-def generate_stuff_ratings (driver = Driver ('radar2.db', 'radar_data', Focus.Stuff)):
+def generate_Location_ratings (driver = Driver ('radar4.db', 'radar_data', Focus.Location)):
     driver.read_variable_data ()
     driver.load_predictions ()
     driver.calculate_run_values_swing()
     driver.write_predictions ();
     #
-    driver.read_predictions(Focus.Stuff)
+    driver.read_predictions(Focus.Location)
     driver.calculate_average_xRVs()
-    driver.read_predictions(Focus.Stuff)
+    driver.read_predictions(Focus.Location)
     driver.write_predictions_players()
     driver.write_players()
 
     driver.calculate_percentiles()
     driver.write_percentiles()
-    # driver.table_to_excel ("Pitcher_Stuff_Ratings_20_80_scale")
+    # driver.table_to_excel ("Pitcher_Location_Ratings_20_80_scale")
 
-# print (Focus.Stuff.name)
+# print (Focus.Location.name)
 # exit (0)
-# run_model(Focus.Stuff)
-# run_Stuff_model()
-driver = Driver ('radar2.db', 'radar_data', Focus.Stuff)
+# run_model(Focus.Location)
+# run_Location_model()
+driver = Driver ('radar4.db', 'radar_data', Focus.Location)
 # driver.read_variable_data()
 # driver.classify_pitches()
 # driver.write_variable_data()
@@ -1510,9 +1502,9 @@ driver = Driver ('radar2.db', 'radar_data', Focus.Stuff)
 
 # print(tf.__version__)
 # run_model ()
-# generate_stuff_ratings()
+# generate_Location_ratings()
 # driver.find_overall_percentiles()
-# generate_stuff_ratings()
+# generate_Location_ratings()
 # driver.load_model(step = 'InPlay', type = 'Fastball')
 # driver.read_variable_data()
 # driver.clean_data_for_in_play_model()
@@ -1527,39 +1519,39 @@ driver = Driver ('radar2.db', 'radar_data', Focus.Stuff)
 # driver.clean_data_for_contact_model()
 # driver.clean_data_for_fastballs()
 # driver.train_classifier()
-# driver.read_predictions(Focus.Stuff)
+# driver.read_predictions(Focus.Location)
 # driver.calculate_average_xRVs()
-# driver.write_predictions(Focus.Stuff)
+# driver.write_predictions(Focus.Location)
 # driver.calculate_percentiles()
 # driver.write_percentiles()
 #
 # driver.write_players()
 # driver.calculate_average_xRVs()
-# driver.write_players(Focus.Stuff)
-# driver.table_to_excel("Percentiles_Stuff_Pitchers")
-# driver.calculate_percentiles(Focus.Stuff)
-# driver.write_percentiles(Focus.Stuff)
+# driver.write_players(Focus.Location)
+# driver.table_to_excel("Percentiles_Location_Pitchers")
+# driver.calculate_percentiles(Focus.Location)
+# driver.write_percentiles(Focus.Location)
 # driver.createPlots()
-# driver.table_to_excel ("Pitcher_Stuff_Ratings_20_80_scale")
+# driver.table_to_excel ("Pitcher_Location_Ratings_20_80_scale")
 # driver.read_variable_data()
 # driver.write_variable_data()
 # driver.load_predictions()
 # driver.calculate_run_values_swing()
 # driver.write_predictions()
-# driver.read_predictions(Focus.Stuff)
-# driver.write_predictions(Focus.Stuff)
+# driver.read_predictions(Focus.Location)
+# driver.write_predictions(Focus.Location)
 # exit (0)
 # driver.calculate_run_values_swing()
 # driver.write_predictions ();
 # driver.calculate_average_xRVs()
 # driver.write_players()
-# driver.table_to_excel ("Pitcher_Stuff_Ratings_20_80_scale")
+# driver.table_to_excel ("Pitcher_Location_Ratings_20_80_scale")
 # driver.read_radar_data()
 # driver.load_relevant_data()
 # driver.write_variable_data()
 
 def process_data ():
-    driver = Driver ('radar2.db', 'radar_data', Focus.Stuff)
+    driver = Driver ('radar4.db', 'radar_data', Focus.Location)
     driver.read_radar_data()
     driver.calculate_inferred_spin_axis()
     driver.calculate_seam_shifted_wake()
@@ -1578,4 +1570,4 @@ def process_data ():
 # driver.load_relevant_data()
 # driver.write_variable_data()
 # run_model()
-# generate_stuff_ratings()
+# generate_Location_ratings()
