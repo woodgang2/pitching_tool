@@ -258,7 +258,7 @@ if not st.session_state.team_flag:
             actual_order = [col for col in desired_order if col in stuff_df.columns]
             # st.success (actual_order)
             stuff_df = stuff_df[actual_order]
-            st.success (stuff_df.columns)
+            # st.success (stuff_df.columns)
             stuff_df = stuff_df.set_index('PitchCount')
             stuff_df.index.name = 'Pitch Count'
             # stuff_df = stuff_df[desired_order]
