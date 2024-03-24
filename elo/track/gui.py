@@ -75,8 +75,9 @@ def display_static_slider(label, value, max_value=100.0):
 #     st.markdown(display_static_slider('xK%', 91), unsafe_allow_html=True)
 #     st.markdown(display_static_slider('xGB%', 92), unsafe_allow_html=True)
 
-st.title('Stuff+ Model (also a swing mechanics model now)')
+st.title('PitchGrader - Stuff+ and Swing Mechanics Model')
 st.write('Database last updated 3/21/2024')
+st.write('Please direct any questions or bug reports to wsg9mf@virginia.edu')
 # Create two text input boxes for the first and last name
 if 'team_flag' not in st.session_state:
     st.session_state.team_flag = False
