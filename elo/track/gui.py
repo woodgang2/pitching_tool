@@ -78,7 +78,7 @@ def display_static_slider(label, value, max_value=100.0):
 st.title('PitchGrader - Stuff+ and Swing Mechanics Model')
 # st.title('Stuff+ Model (also a swing mechanics model now)')
 st.write('Database last updated 3/21/2024')
-st.write('Please direct any questions or bug reports to wsg9mf@virginia.edu')
+st.write('Please send any questions or bug reports to wsg9mf@virginia.edu')
 # Create two text input boxes for the first and last name
 if 'team_flag' not in st.session_state:
     st.session_state.team_flag = False
@@ -100,12 +100,14 @@ col1, col2, space = st.columns([2, 2, 2])
         # driver.write_data()
         # st.write('Updated. You may have to reload the page to see the effects')
 # Button to toggle between personal details and team view
-with col2:
-    team_toggle = st.button("Toggle team/player")
-    if (team_toggle):
-        st.session_state.team_flag = not st.session_state.team_flag
+# with col2:
+#     team_toggle = st.button("Toggle team/player")
+#     if (team_toggle):
+#         st.session_state.team_flag = not st.session_state.team_flag
         # st.write (team_flag)
-
+team_toggle = st.button("Toggle team/player")
+if (team_toggle):
+    st.session_state.team_flag = not st.session_state.team_flag
 batting_percentiles_df = driver.retrieve_percentiles_bat_team ('All')
 pitching_stuff_df = driver.retrieve_stuff_team ('All')
 # batting_names_raw = batting_percentiles_df ['Batter']
