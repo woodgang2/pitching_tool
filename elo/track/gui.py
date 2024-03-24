@@ -74,7 +74,7 @@ def display_static_slider(label, value, max_value=100.0):
 # with col2:
 #     st.markdown(display_static_slider('xK%', 91), unsafe_allow_html=True)
 #     st.markdown(display_static_slider('xGB%', 92), unsafe_allow_html=True)
-st.empty ()
+# st.empty ()
 st.title('PitchGrader - Stuff+ and Swing Mechanics Model')
 # st.title('Stuff+ Model (also a swing mechanics model now)')
 st.write('Database last updated 3/21/2024')
@@ -265,7 +265,7 @@ if not st.session_state.team_flag:
             #     }
             #     </style>
             #     """, unsafe_allow_html=True)
-            # container = st.empty ()
+            container = st.empty ()
             container = st.container()
             container.markdown("<div margin-left: auto, margin-right: auto>", unsafe_allow_html=True)
             container.dataframe(stuff_df)
