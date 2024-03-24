@@ -87,7 +87,7 @@ if 'team_flag' not in st.session_state:
 driver = database_driver.DatabaseDriver()
 stuff_driver = stuff_plus.Driver('radar2.db', 'radar_data')
 # Update dataset button
-col1, col2, space = st.columns([2, 2, 2])
+# col1, col2, space = st.columns([2, 2, 2])
 # with col1:
 #     update = st.button("Update Dataset", key='update_dataset', type = 'primary')
 #     if update:
@@ -105,7 +105,7 @@ col1, col2, space = st.columns([2, 2, 2])
 #     if (team_toggle):
 #         st.session_state.team_flag = not st.session_state.team_flag
         # st.write (team_flag)
-team_toggle = st.button("Toggle team/player", type = 'primary')
+team_toggle = st.button("Toggle team/player", key='team_toggle', type = 'primary')
 if (team_toggle):
     st.session_state.team_flag = not st.session_state.team_flag
 batting_percentiles_df = driver.retrieve_percentiles_bat_team ('All')
