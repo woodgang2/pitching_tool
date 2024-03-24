@@ -281,6 +281,7 @@ if not st.session_state.team_flag:
             cols.insert(2, 'xRV')
             df = df[cols]
             df = df.sort_values(by='Usage', ascending = False)
+            df.index.name = 'Percentiles'
             st.dataframe(df)
             pitch_types = df['PitchType'].unique().tolist()
             index = st.selectbox("Pitch Type", range(len(pitch_types)), format_func=lambda x: pitch_types[x])
