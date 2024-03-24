@@ -249,7 +249,7 @@ if not st.session_state.team_flag:
             stuff_df = stuff_df.drop_duplicates ('Pitcher')
             stuff_df = stuff_df.drop (columns = ['Pitcher', 'PitcherTeam', 'PitcherThrows'])
             # stuff_df = stuff_df.drop_duplicates ('Pitcher')
-            stuff_df.rename(columns={'Overall': 'Overall Stuff'}, inplace=True)
+            stuff_df.rename(columns={'Overall': 'Overall Stuff', 'PitchCount' : 'Pitch Count'}, inplace=True)
             columns_to_drop = [column for column in stuff_df.columns if column.endswith('Usage')]
             stuff_df = stuff_df.drop(columns=columns_to_drop)
             stuff_df = stuff_df.dropna(axis=1)
@@ -258,6 +258,7 @@ if not st.session_state.team_flag:
             actual_order = [col for col in desired_order if col in stuff_df.columns]
             # st.success (actual_order)
             stuff_df = stuff_df[actual_order]
+            stuff_df = stuff_df.set_index('Pitch Count')
             # stuff_df = stuff_df[desired_order]
             # st.markdown("""
             #     <style>
