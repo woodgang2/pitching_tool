@@ -1263,6 +1263,7 @@ class Driver:
         # print (predictions_df)
         # exit (0)
         temp_df = predictions_df.copy ()
+        temp_df = temp_df[pitcher_total_pitches >= 200]
         temp_df['Overall_average_xRV'] = predictions_df.groupby('Pitcher')['xRV'].transform('mean')
         temp_df = temp_df.drop_duplicates(subset=['Pitcher'], keep='first')
         pitch_stats_df = temp_df.groupby('PitchType')['average_xRV'].agg(['mean', 'std']).reset_index()
@@ -1634,9 +1635,9 @@ def run_model (focus=Focus.Location):
     return driver
 
 def generate_Location_ratings (driver = Driver ('radar4.db', 'radar_data', Focus.Location)):
-    driver.read_variable_data ()
-    driver.load_predictions ()
-    # driver.read_predictions (Focus.Location)
+    # driver.read_variable_data ()
+    # driver.load_predictions ()
+    driver.read_predictions (Focus.Location)
     driver.calculate_run_values_swing()
     driver.write_predictions ();
     #
