@@ -237,7 +237,7 @@ if not st.session_state.team_flag:
                     display_static_slider('Bat Speed', df ['TrueBatSpeed'].iloc [index])
                     display_static_slider('Pitch Selection', df ['SwingDecision'].iloc [index])
                     display_static_slider('Contact Efficiency', df ['AverageEA'].iloc [index])
-                    display_static_slider('Raw Power', df ['NeutralExitSpeed'].iloc [index])
+                    display_static_slider('Neutral Exit Speed', df ['NeutralExitSpeed'].iloc [index])
 
                 with col2:
                     # display_static_slider('Bat-to-Ball', df ['AverageSF'].iloc [index])
