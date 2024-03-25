@@ -75,7 +75,21 @@ def display_static_slider(label, value, max_value=100.0):
 #     st.markdown(display_static_slider('xK%', 91), unsafe_allow_html=True)
 #     st.markdown(display_static_slider('xGB%', 92), unsafe_allow_html=True)
 # st.empty ()
+st.markdown("""
+    <style>
+    .reportview-container .markdown-text-container {
+        padding-top: 0rem;
+    }
+    .reportview-container .main .block-container{
+        padding-top: 0rem;
+        padding-bottom: 0rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Your title and divider with reduced whitespace
 st.title('PitchGrader')
+st.markdown('<hr style="height:2px;border:none;color:#333;background-color:#333;" /> ', unsafe_allow_html=True)
 st.divider ()
 st.markdown("""---""")
 st.subheader ('Stuff, Command, and Swing Mechanics Model')
