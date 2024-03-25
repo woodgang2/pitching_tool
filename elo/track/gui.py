@@ -361,7 +361,7 @@ else:
                 'Slider' : 'SL',
                 'Splitter' : 'FS'
             }
-            desired_order = ['Pitcher', 'PitcherTeam', 'PitcherThrows', 'PitchCount', 'Overall', 'FF', 'SI', 'FC', 'SL', 'CU', 'FS', 'CH']
+            desired_order = ['Pitcher', 'PitcherTeam', 'PitcherThrows', 'PitchCount', 'Command', 'Overall', 'FF', 'SI', 'FC', 'SL', 'CU', 'FS', 'CH']
             stuff_df = stuff_df.rename(columns=rename_columns)
             # stuff_df = pitching_stuff_df [pitching_stuff_df ['PitchingTeam'] == team_name]
             if team_name != 'All':
