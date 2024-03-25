@@ -76,6 +76,7 @@ def display_static_slider(label, value, max_value=100.0):
 #     st.markdown(display_static_slider('xGB%', 92), unsafe_allow_html=True)
 # st.empty ()
 st.title('PitchGrader')
+st.divider ()
 st.subheader ('Stuff, Command, and Swing Mechanics Model')
 # st.title('Stuff+ Model (also a swing mechanics model now)')
 st.write('Database last updated 3/21/2024')
