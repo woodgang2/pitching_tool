@@ -1263,7 +1263,7 @@ class Driver:
         # print (predictions_df)
         # exit (0)
         temp_df = predictions_df.copy ()
-        temp_df = temp_df[pitcher_total_pitches >= 200]
+        temp_df = temp_df[pitcher_total_pitches >= 50]
         temp_df['Overall_average_xRV'] = predictions_df.groupby('Pitcher')['xRV'].transform('mean')
         temp_df = temp_df.drop_duplicates(subset=['Pitcher'], keep='first')
         pitch_stats_df = temp_df.groupby('PitchType')['average_xRV'].agg(['mean', 'std']).reset_index()

@@ -365,6 +365,7 @@ else:
         else:
             location_df = driver.retrieve_location_team (team_name)
             location_df = location_df [['Pitcher', 'Overall']]
+            location_df['Overall'] = location_df['Overall'].clip(lower=20, upper=80)
             location_df = location_df.rename(columns={'Overall': 'Command'})
             stuff_df = driver.retrieve_stuff_team (team_name)
             stuff_df = stuff_df.rename(columns={'Overall': 'Stuff'})
@@ -386,6 +387,7 @@ else:
                 stuff_df = stuff_df.drop (columns = ['PitcherTeam'])
             columns_to_drop = [column for column in stuff_df.columns if column.endswith('Usage')]
             stuff_df = stuff_df.drop(columns=columns_to_drop)
+            stuff_df = stuff_df.drop_duplicates ('Pitcher')
             if min_pitch:  # Check if something was entered
                 try:
                     min_pitch = int(min_pitch)
