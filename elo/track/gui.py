@@ -90,8 +90,8 @@ st.markdown("""
 # Your title and divider with reduced whitespace
 st.title('PitchGrader')
 st.markdown('<hr style="height:2px;border:none;color:#333;background-color:#333;" /> ', unsafe_allow_html=True)
-st.divider ()
-st.markdown("""---""")
+# st.divider ()
+# st.markdown("""---""")
 st.subheader ('Stuff, Command, and Swing Mechanics Model')
 # st.title('Stuff+ Model (also a swing mechanics model now)')
 st.write('Database last updated 3/21/2024')
