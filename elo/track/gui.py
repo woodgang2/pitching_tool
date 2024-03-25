@@ -233,6 +233,7 @@ if not st.session_state.team_flag:
             location_df = driver.retrieve_location (name)
             location_df = location_df [['Pitcher', 'Overall']]
             location_df = location_df.rename(columns={'Overall': 'Command'})
+            st.dataframe (location_df)
             stuff_df = driver.retrieve_stuff (name)
             stuff_df = stuff_df.merge (location_df, on = 'Pitcher')
             stuff_df = stuff_df.round(0)
