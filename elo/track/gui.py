@@ -233,7 +233,7 @@ if not st.session_state.team_flag:
             location_df = driver.retrieve_location (name)
             location_df = location_df [['Pitcher', 'Overall']]
             location_df = location_df.rename(columns={'Overall': 'Command'})
-            st.dataframe (location_df)
+            # st.dataframe (location_df)
             stuff_df = driver.retrieve_stuff (name)
             stuff_df = stuff_df.merge (location_df, on = 'Pitcher')
             stuff_df = stuff_df.round(0)
@@ -346,7 +346,11 @@ else:
             #want to write update here
             st.error(f'{team_name} not found. Remember that the name is case sensitive')
         else:
+            location_df = driver.retrieve_location_team (team_name)
+            location_df = location_df [['Pitcher', 'Overall']]
+            location_df = location_df.rename(columns={'Overall': 'Command'})
             stuff_df = driver.retrieve_stuff_team (team_name)
+            stuff_df = stuff_df.merge (location_df, on = 'Pitcher')
             stuff_df = stuff_df.round(0)
             rename_columns = {
                 'ChangeUp': 'CH',

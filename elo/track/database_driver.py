@@ -247,6 +247,17 @@ class DatabaseDriver:
         # print (df)
         return df
 
+    def retrieve_location_team (self, team):
+        db_filename = os.path.join(self.current_dir, 'radar3.db')
+        table = 'Pitcher_Location_Ratings_20_80_scale'
+        query = f'SELECT * FROM {table}'
+        engine = create_engine(f'sqlite:///{db_filename}')
+        df = pd.read_sql_query(query, engine)
+        if (team != 'All'):
+            df = df [df['PitcherTeam'] == team]
+        # print (df)
+        return df
+
     def retrieve_stuff (self, player):
         db_filename = os.path.join(self.current_dir, 'radar3.db')
 
