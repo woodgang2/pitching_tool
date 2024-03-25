@@ -503,8 +503,8 @@ class DatabaseDriver:
 # driver.retrieve_percentiles("Moore, Bryson")
 # driver.read_data()
 # driver.write_data()
-driver = DatabaseDriver ()
-driver.write_locations ()
+# driver = DatabaseDriver ()
+# driver.write_locations ()
 
 def update_gui ():
     driver = DatabaseDriver ()
