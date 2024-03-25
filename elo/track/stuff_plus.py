@@ -1106,11 +1106,11 @@ class Driver:
         predictions_df.to_sql (f'{self.focus.name}_Probabilities', conn, if_exists='replace', index=False)
         self.predictions_df = predictions_df
         conn.close ()
-
+    #TODO: find average foul/strike value
     def calculate_run_values_swing (self):
         expected_run_values = {
-            "SwingingStrike": 0.08,
-            "Foul": 0,
+            "SwingingStrike": 0.11,
+            "Foul": 0.02,
             "SoftGB": 0,
             "HardGB": -0.1,
             "SoftLD": -0.25,
@@ -1124,6 +1124,7 @@ class Driver:
         predictions_df = predictions_df.fillna(0)
         predictions_df['EV'] = (
                 predictions_df['xWhiff%'] * expected_run_values["SwingingStrike"]
+                + predictions_df['Prob_Contact'] * predictions_df['xFoul%'] * expected_run_values['Foul']
                 + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_SoftGB'] * expected_run_values['SoftGB']
                 + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_HardGB'] * expected_run_values['HardGB']
                 + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_SoftLD'] * expected_run_values['SoftLD']

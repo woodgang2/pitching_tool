@@ -230,7 +230,11 @@ if not st.session_state.team_flag:
                     display_static_slider('"Game Power"', df ['NeutralHR'].iloc [index])
 
         else:
+            location_df = driver.retrieve_location (name)
+            location_df = location_df [['Pitcher', 'Overall']]
+            location_df = location_df.rename(columns={'Overall': 'Command'})
             stuff_df = driver.retrieve_stuff (name)
+            stuff_df = stuff_df.merge (location_df, on = 'Pitcher')
             stuff_df = stuff_df.round(0)
 
             rename_columns = {
@@ -242,7 +246,7 @@ if not st.session_state.team_flag:
                 'Slider' : 'SL',
                 'Splitter' : 'FS'
             }
-            desired_order = ['PitchCount', 'Overall Stuff', 'FF', 'SI', 'FC', 'SL', 'CU', 'FS', 'CH']
+            desired_order = ['PitchCount', 'Command', 'Overall Stuff', 'FF', 'SI', 'FC', 'SL', 'CU', 'FS', 'CH']
             stuff_df = stuff_df.rename(columns=rename_columns)
 
             # stuff_df = pitching_stuff_df [pitching_stuff_df ['Pitcher'] == name]

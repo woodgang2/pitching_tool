@@ -264,6 +264,18 @@ class DatabaseDriver:
         # print (df)
         return df
 
+    def retrieve_location (self, player):
+        db_filename = os.path.join(self.current_dir, 'radar3.db')
+        table = 'Pitcher_Location_Ratings_20_80_scale'
+        query = f'SELECT * FROM {table}'
+        engine = create_engine(f'sqlite:///{db_filename}')
+        df = pd.read_sql_query(query, engine)
+        # conn.close()
+        df = df [df['Pitcher'] == player]
+        # print (df)
+        return df
+
+
     def write_stuff (self):
         db_filename = os.path.join(self.current_dir, 'radar2.db')
         # Create a connection to the database
@@ -279,6 +291,22 @@ class DatabaseDriver:
         self.write_data_table(df, table)
         # print (df)
         return df
+    def write_locations (self):
+        db_filename = os.path.join(self.current_dir, 'radar4.db')
+        # Create a connection to the database
+        # conn = sqlite3.connect(db_file)
+        # db_filename = 'radar2.db'
+        table = 'Pitcher_Location_Ratings_20_80_scale'
+        # table = 'Stuff_Probabilities'
+        # conn = sqlite3.connect(db_filename)
+        query = f'SELECT * FROM {table}'
+        engine = create_engine(f'sqlite:///{db_filename}')
+        df = pd.read_sql_query(query, engine)
+        # conn.close()
+        self.write_data_table(df, table)
+        # print (df)
+        return df
+
 
     def retrieve_all_pitches (self, player):
         db_filename = os.path.join(self.current_dir, 'radar2.db')
@@ -475,6 +503,8 @@ class DatabaseDriver:
 # driver.retrieve_percentiles("Moore, Bryson")
 # driver.read_data()
 # driver.write_data()
+driver = DatabaseDriver ()
+driver.write_locations ()
 
 def update_gui ():
     driver = DatabaseDriver ()
@@ -483,3 +513,4 @@ def update_gui ():
     driver.write_percentiles_bat()
     driver.write_percentiles()
     driver.write_stuff()
+    driver.write_locations ()

@@ -741,12 +741,14 @@ class Driver:
                             'PlateLocSide']
         self.input_variables_df = self.radar_df[selected_columns].copy()
 
-    def clean_data_for_take_model (self):
+    def clean_data_for_take_model (self, training = 1):
         self.current_df = self.input_variables_df[
             (self.input_variables_df['PitchCall'] == 'Ball') |
             (self.input_variables_df['PitchCall'] == 'StrikeCalled') |
             (self.input_variables_df['PitchCall'] == 'HitByPitch')
             ]
+        if (training == 0):
+            self.current_df = self.input_variables_df
         value_map = {
             'HitByPitch' : 2,
             'Ball' : 1,
@@ -755,11 +757,38 @@ class Driver:
         self.current_df['Target'] = self.current_df['PitchCall'].replace(value_map)
         self.param = {
             'objective': 'multi:softprob',
-            'num_class': 6,
+            'num_class': 3,
             'eval_metric': 'mlogloss',
         }
         self.multi = True
         self.currently_modeling = 'Take'
+
+    def clean_data_for_swing_model (self, training = 1):
+        self.current_df = self.input_variables_df[
+            (self.input_variables_df['PitchCall'] == 'Ball') |
+            (self.input_variables_df['PitchCall'] == 'StrikeCalled') |
+            (self.input_variables_df['PitchCall'] == 'HitByPitch') |
+            (self.input_variables_df['PitchCall'] == 'InPlay') |
+            (self.input_variables_df['PitchCall'] == 'StrikeSwinging') |
+            (self.input_variables_df['PitchCall'] == 'Foul')
+            ]
+        if (training == 0):
+            self.current_df = self.input_variables_df
+        value_map = {
+            'Ball' : 0,
+            'StrikeCalled' : 0,
+            'HitByPitch' : 0,
+            'InPlay' : 1,
+            'StrikeSwinging' : 1,
+            'Foul' : 1
+        }
+        self.current_df['Target'] = self.current_df['PitchCall'].replace(value_map)
+        self.param = {
+            'objective': 'binary:logistic',
+            'eval_metric': 'logloss'
+        }
+        self.multi = False
+        self.currently_modeling = 'Swing'
     def clean_data_for_contact_model (self, training = 1):
         self.current_df = self.input_variables_df[
             (self.input_variables_df['PitchCall'] == 'InPlay') |
@@ -914,7 +943,7 @@ class Driver:
         self.features = [
             'PitchType', 'PitcherThrows', 'BatterSide'
         ]
-        self.features.extend (self.context_features)
+        # self.features.extend (self.context_features)
         # print (self.current_df.to_string ())
         # exit (0)
         self.current_df = self.current_df[
@@ -935,7 +964,7 @@ class Driver:
         self.features = [
             'PitchType', 'PitcherThrows', 'BatterSide'
         ]
-        self.features.extend (self.context_features)
+        # self.features.extend (self.context_features)
         self.current_df = self.current_df[
             (self.current_df['PitchType'] == 'Slider') |
             (self.current_df['PitchType'] == 'Curveball') |
@@ -947,7 +976,7 @@ class Driver:
         self.features = [
             'PitchType', 'PitcherThrows', 'BatterSide'
         ]
-        self.features.extend (self.context_features)
+        # self.features.extend (self.context_features)
         self.current_df = self.current_df[
             (self.current_df['PitchType'] == 'ChangeUp') |
             (self.current_df['PitchType'] == 'Splitter')
@@ -956,13 +985,12 @@ class Driver:
 
     def train_classifier (self):
         features = self.features + self.context_features
-        if (self.focus == Focus.Location):
-            features = self.context_features
         X = self.current_df[features]
         y = self.current_df['Target']
         # if (self.multi):
         #     y = self.current_df['Target1', 'Target2', 'Target3']
         # print (self.input_variables_df.to_string ())
+        # print (X)
         X_encoded = pd.get_dummies(X, columns=['PitchType', 'PitcherThrows', 'BatterSide'])
         X['PitchType'] = X['PitchType'].astype('category')
         X['PitcherThrows'] = X['PitcherThrows'].astype('category')
@@ -1002,7 +1030,7 @@ class Driver:
             return score
 
         study = optuna.create_study(direction='minimize')
-        study.optimize(objective, n_trials=80)
+        study.optimize(objective, n_trials=85)
         best_model = study.best_trial.user_attrs["model"]
         best_params = study.best_trial.params
         model_directory = "Full_Model"
@@ -1060,6 +1088,24 @@ class Driver:
         #     predictions_df[column] = np.nan
 
         conn = sqlite3.connect(f'{self.db_file}')
+        TBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2" FROM "Location_Take-BreakingBall"', conn)
+        TBB_df = TBB_df.rename (columns = {"Prob_0" : "Prob_CS", "Prob_1" : "Prob_Ball", "Prob_2" : "Prob_HBP"})
+        TF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2" FROM "Location_Take-Fastball"', conn)
+        TF_df = TF_df.rename (columns = {"Prob_0" : "Prob_CS", "Prob_1" : "Prob_Ball", "Prob_2" : "Prob_HBP"})
+        TO_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1", "Prob_2" FROM "Location_Take-Offspeed"', conn)
+        TO_df = TO_df.rename (columns = {"Prob_0" : "Prob_CS", "Prob_1" : "Prob_Ball", "Prob_2" : "Prob_HBP"})
+        take_df = pd.concat([TF_df, TBB_df, TO_df], axis=0)
+        take_df.reset_index(drop=True, inplace=True)
+
+        SBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Swing-BreakingBall"', conn)
+        SBB_df = SBB_df.rename (columns = {"Prob_0" : "xTake%", "Prob_1" : "xSwing%"})
+        SF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Swing-Fastball"', conn)
+        SF_df = SF_df.rename (columns = {"Prob_0" : "xTake%", "Prob_1" : "xSwing%"})
+        SO_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Swing-Offspeed"', conn)
+        SO_df = SO_df.rename (columns = {"Prob_0" : "xTake%", "Prob_1" : "xSwing%"})
+        swing_df = pd.concat([SF_df, SBB_df, SO_df], axis=0)
+        swing_df.reset_index(drop=True, inplace=True)
+
         CBB_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Contact-BreakingBall"', conn)
         CBB_df = CBB_df.rename (columns = {"Prob_0" : "xWhiff%", "Prob_1" : "Prob_Contact"})
         CF_df = pd.read_sql_query('SELECT "PitchUID", "Prob_0", "Prob_1" FROM "Location_Contact-Fastball"', conn)
@@ -1087,6 +1133,8 @@ class Driver:
         inplay_df = pd.concat([IF_df, IBB_df, IO_df], axis=0)
         inplay_df.reset_index(drop=True, inplace=True)
 
+        predictions_df = predictions_df.merge (take_df, on='PitchUID', how='left')
+        predictions_df = predictions_df.merge (swing_df, on='PitchUID', how='left')
         predictions_df = predictions_df.merge (con_df, on='PitchUID', how='left')
         predictions_df = predictions_df.merge (foul_df, on='PitchUID', how='left')
         predictions_df = predictions_df.merge (inplay_df, on='PitchUID', how='left')
@@ -1100,9 +1148,51 @@ class Driver:
         conn.close ()
 
     def calculate_run_values_swing (self):
+        strike_values = {
+            (0, 0): -0.048,#0.037
+            (0, 1): -0.066,#0.051
+            (0, 2): -0.196,#0.151
+            (1, 0): -0.062,#0.048
+            (1, 1): -0.070,#0.054
+            (1, 2): -0.223,#0.172
+            (2, 0): -0.084,#0.065
+            (2, 1): -0.079,#0.061
+            (2, 2): -0.273,#0.210
+            (3, 0): -0.152,#0.117
+            (3, 1): -0.086,#0.066
+            (3, 2): -0.384,#0.295
+        }
+        foul_values = {
+            (0, 0): -0.048,#0.037
+            (0, 1): -0.066,#0.051
+            (0, 2): 0,#0.151
+            (1, 0): -0.062,#0.048
+            (1, 1): -0.070,#0.054
+            (1, 2): 0,#0.172
+            (2, 0): -0.084,#0.065
+            (2, 1): -0.079,#0.061
+            (2, 2): 0,#0.210
+            (3, 0): -0.152,#0.117
+            (3, 1): -0.086,#0.066
+            (3, 2): 0,#0.295
+        }
+        ball_values = {
+            (0, 0): 0.045,
+            (0, 1): 0.031,
+            (0, 2): 0.027,
+            (1, 0): 0.081,
+            (1, 1): 0.059,
+            (1, 2): 0.050,
+            (2, 0): 0.186,
+            (2, 1): 0.118,
+            (2, 2): 0.111,
+            (3, 0): 0.067,
+            (3, 1): 0.219,
+            (3, 2): 0.305,
+        }
+        woba_scale = 1.3
         expected_run_values = {
-            "SwingingStrike": 0.08,
-            "Foul": 0,
+            "HBP" : -0.3,
             "SoftGB": 0,
             "HardGB": -0.1,
             "SoftLD": -0.25,
@@ -1114,14 +1204,38 @@ class Driver:
         predictions_df = self.predictions_df
         predictions_df = predictions_df.dropna(subset=['xWhiff%'])
         predictions_df = predictions_df.fillna(0)
+        def calculate_strike_value(row):
+            count = (row['Balls'], row['Strikes'])
+            swinging_strike_value = strike_values.get(count, 0)
+            ev = swinging_strike_value
+            return ev
+        def calculate_ball_value(row):
+            count = (row['Balls'], row['Strikes'])
+            ball_value = ball_values.get(count, 0)
+            ev = ball_value
+            return ev
+        def calculate_foul_value(row):
+            count = (row['Balls'], row['Strikes'])
+            foul_value = foul_values.get(count, 0)
+            ev = foul_value
+            return ev
+
+        # Apply the calculate_ev function row-wise
+        predictions_df['StrikeValue'] = predictions_df.apply(calculate_strike_value, axis=1)
+        predictions_df['BallValue'] = predictions_df.apply(calculate_ball_value, axis=1)
+        predictions_df['FoulValue'] = predictions_df.apply(calculate_foul_value, axis=1)
         predictions_df['EV'] = (
-                predictions_df['xWhiff%'] * expected_run_values["SwingingStrike"]
-                + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_SoftGB'] * expected_run_values['SoftGB']
-                + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_HardGB'] * expected_run_values['HardGB']
-                + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_SoftLD'] * expected_run_values['SoftLD']
-                + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_HardLD'] * expected_run_values['HardLD']
-                + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_SoftFB'] * expected_run_values['SoftFB']
-                + predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_HardFB'] * expected_run_values['HardFB']
+                predictions_df['xTake%'] * predictions_df ['Prob_CS'] * predictions_df["StrikeValue"]
+                + predictions_df['xTake%'] * predictions_df ['Prob_Ball'] * predictions_df["BallValue"]
+                + predictions_df['xTake%'] * predictions_df ['Prob_HBP'] * expected_run_values["HBP"]
+                + predictions_df['xSwing%'] * predictions_df['xWhiff%'] * predictions_df["StrikeValue"]
+                + predictions_df['xSwing%'] * predictions_df['Prob_Contact'] * predictions_df['xFoul%'] * predictions_df['FoulValue']
+                + predictions_df['xSwing%'] * predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_SoftGB'] * expected_run_values['SoftGB']
+                + predictions_df['xSwing%'] * predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_HardGB'] * expected_run_values['HardGB']
+                + predictions_df['xSwing%'] * predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_SoftLD'] * expected_run_values['SoftLD']
+                + predictions_df['xSwing%'] * predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_HardLD'] * expected_run_values['HardLD']
+                + predictions_df['xSwing%'] * predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_SoftFB'] * expected_run_values['SoftFB']
+                + predictions_df['xSwing%'] * predictions_df['Prob_Contact'] * predictions_df['Prob_InPlay'] * predictions_df['Prob_HardFB'] * expected_run_values['HardFB']
         )
         ev = predictions_df ['EV'].mean ()
         predictions_df ['xRV'] = predictions_df ['EV'] - ev
@@ -1342,7 +1456,7 @@ class Driver:
         plt.show()
 
     def load_model (self, focus = 'Location', step = 'Contact', type = 'BreakingBall'):
-        model_filename = f'JobLib_Model/joblib_model_{self.focus.name}_{self.currently_modeling}--{self.current_pitch_class}.joblib'
+        model_filename = f'JobLib_Model_Location/joblib_model_{self.focus.name}_{self.currently_modeling}--{self.current_pitch_class}.joblib'
         # self.model.load_model (model_filename)
         self.model = joblib.load (model_filename)
     def generate_predictions (self, focus = 'Location', step = 'Contact', type = 'BreakingBall'):
@@ -1388,6 +1502,28 @@ def train_model (focus=Focus.Location):
     # driver.write_variable_data()
 
     driver.read_variable_data()
+    driver.clean_data_for_swing_model()
+    driver.clean_data_for_fastballs()
+    driver.train_classifier()
+    driver.clean_data_for_swing_model()
+    driver.clean_data_for_breakingballs()
+    driver.train_classifier()
+    driver.clean_data_for_swing_model()
+    driver.clean_data_for_offspeed()
+    driver.train_classifier()
+
+    driver.read_variable_data()
+    driver.clean_data_for_take_model()
+    driver.clean_data_for_fastballs()
+    driver.train_classifier()
+    driver.clean_data_for_take_model()
+    driver.clean_data_for_breakingballs()
+    driver.train_classifier()
+    driver.clean_data_for_take_model()
+    driver.clean_data_for_offspeed()
+    driver.train_classifier()
+
+    driver.read_variable_data()
     driver.clean_data_for_contact_model()
     driver.clean_data_for_fastballs()
     driver.train_classifier()
@@ -1425,6 +1561,34 @@ def run_model (focus=Focus.Location):
     # driver.read_radar_data()
     # driver.load_relevant_data()
     # driver.write_variable_data()
+
+    driver.read_variable_data()
+    driver.clean_data_for_swing_model(0)
+    driver.clean_data_for_fastballs()
+    driver.load_model()
+    driver.generate_predictions()
+    driver.clean_data_for_swing_model(0)
+    driver.clean_data_for_breakingballs()
+    driver.load_model()
+    driver.generate_predictions()
+    driver.clean_data_for_swing_model(0)
+    driver.clean_data_for_offspeed()
+    driver.load_model()
+    driver.generate_predictions()
+
+    driver.read_variable_data()
+    driver.clean_data_for_take_model(0)
+    driver.clean_data_for_fastballs()
+    driver.load_model()
+    driver.generate_predictions()
+    driver.clean_data_for_take_model(0)
+    driver.clean_data_for_breakingballs()
+    driver.load_model()
+    driver.generate_predictions()
+    driver.clean_data_for_take_model(0)
+    driver.clean_data_for_offspeed()
+    driver.load_model()
+    driver.generate_predictions()
 
     driver.read_variable_data()
     driver.clean_data_for_contact_model(0)
@@ -1472,6 +1636,7 @@ def run_model (focus=Focus.Location):
 def generate_Location_ratings (driver = Driver ('radar4.db', 'radar_data', Focus.Location)):
     driver.read_variable_data ()
     driver.load_predictions ()
+    # driver.read_predictions (Focus.Location)
     driver.calculate_run_values_swing()
     driver.write_predictions ();
     #
@@ -1485,10 +1650,12 @@ def generate_Location_ratings (driver = Driver ('radar4.db', 'radar_data', Focus
     driver.write_percentiles()
     # driver.table_to_excel ("Pitcher_Location_Ratings_20_80_scale")
 
+# train_model()
 # print (Focus.Location.name)
 # exit (0)
 # run_model(Focus.Location)
 # run_Location_model()
+generate_Location_ratings()
 driver = Driver ('radar4.db', 'radar_data', Focus.Location)
 # driver.read_variable_data()
 # driver.classify_pitches()
